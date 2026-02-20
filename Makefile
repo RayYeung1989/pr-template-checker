@@ -1,6 +1,7 @@
 .PHONY: start start-awake awake stop status last cycles monitor pause resume install uninstall team help
 
 UNAME_S := $(shell uname -s 2>/dev/null || echo Unknown)
+ENGINE ?= claude
 
 # === Quick Start ===
 
