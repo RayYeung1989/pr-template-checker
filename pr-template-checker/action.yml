@@ -1,0 +1,70 @@
+name: 'PR Template Checker'
+
+description: 'Verify that pull requests follow your required template format'
+
+author: 'Ray Yeung'
+
+branding:
+  icon: 'check-square'
+  color: 'blue'
+
+inputs:
+  template:
+    description: 'Required template content (one pattern per line)'
+    required: true
+    default: |
+      ## Summary
+      -
+
+      ## Test Plan
+      -
+  required-patterns:
+    description: 'Required patterns that must be present (comma-separated)'
+    required: false
+    default: ''
+  fail-on-missing:
+    description: 'Fail the check if required patterns are missing'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check PR template
+      shell: bash
+      run: |
+        TEMPLATE="${{ inputs.template }}"
+        REQUIRED_PATTERNS="${{ inputs.required-patterns }}"
+        FAIL_ON_MISSING="${{ inputs.fail-on-missing }}"
+
+        # Get PR body
+        PR_BODY="${{ github.event.pull_request.body }}"
+
+        if [ -z "$PR_BODY" ]; then
+          echo "::warning::PR description is empty"
+          if [ "$FAIL_ON_MISSING" = "true" ]; then
+            exit 1
+          else
+            exit 0
+          fi
+        fi
+
+        # Check each required pattern
+        if [ -n "$REQUIRED_PATTERNS" ]; then
+          MISSING=""
+          IFS=',' read -ra PATTERNS <<< "$REQUIRED_PATTERNS"
+          for pattern in "${PATTERNS[@]}"; do
+            if ! echo "$PR_BODY" | grep -qi "$pattern"; then
+              MISSING="$MISSING $pattern"
+            fi
+          done
+
+          if [ -n "$MISSING" ]; then
+            echo "::error::Missing required patterns:$MISSING"
+            if [ "$FAIL_ON_MISSING" = "true" ]; then
+              exit 1
+            fi
+          fi
+        fi
+
+        echo "::success::PR template check passed"
