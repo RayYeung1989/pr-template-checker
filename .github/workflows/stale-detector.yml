@@ -1,0 +1,20 @@
+name: Stale Detector
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect stale PRs and Issues
+        uses: RayYeung1989/pr-stale-detector@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-stale: 60
+          days-before-close: 7
+          stale-label: stale
+          exempt-pr-labels: pinned,security,wip
